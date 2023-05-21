@@ -3,6 +3,8 @@ import random
 import numpy as np
 from collections import deque
 from model import Linear_Qnet, QTrainer
+from os.path import exists as os_path_exists
+import pickle
 
 class Agent:
         
@@ -15,13 +17,29 @@ class Agent:
         self.num_simulations = 0
         self.epsilon = 0 # Randomness
         self.gamma = 0.9 # Discount rate
-
-        self.memory = deque(maxlen = self.max_memory) # For popleft when exceeding memory
+        
+        # Load model / Existing weights + biases (if there are any) and 
         self.model = Linear_Qnet(input_size = 11, hidden_size = 256, output_size = 3)
+        if os_path_exists("model"):
+
+            # Load state dict
+            saved_dict = torch.load("model/model.pth", map_location = torch.device("cpu"))
+            self.model.load_state_dict(state_dict = saved_dict)
+
+            # Load memory
+            with open("model/memory.txt", "rb") as memory_file:
+                serialised_queue = memory_file.read()
+            self.memory = pickle.loads(serialised_queue)
+
+            # Set the number of simulations to be the last saved number
+            with open("model/simulations.txt", "r") as simulations_file:
+                self.num_simulations = int(simulations_file.read())
+
+        else:
+            # Create new memory queue
+            self.memory = deque(maxlen = self.max_memory) # Automatically discards leftmost item when exceeding memory
+
         self.trainer = QTrainer(self.model, learning_rate = self.learning_rate, gamma = self.gamma)
-
-        # MODEL TRAINER
-
 
     def get_state(self, game):
 
@@ -71,10 +89,10 @@ class Agent:
         return np.array(state, dtype = int) # dtype = int converts all boolean values to 0 or 1
     
     def remember(self, state, action, reward, next_state, game_over):
-        self.memory.append((state, action, reward, next_state, game_over)) # Pops left is max memory is reached 
+        self.memory.append((state, action, reward, next_state, game_over)) # Automatically discards leftmost item when exceeding memory
     
     def train_long_memory(self):
-        # Grab self.batch_size  samplesfrom memory
+        # Grab self.batch_size samples from memory
         if len(self.memory) >= self.batch_size:
             mini_sample = random.sample(self.memory, self.batch_size)
 
@@ -90,8 +108,8 @@ class Agent:
 
     def get_action(self, state):
         
-        # In the beginning, perform Exploration
-        # Once the model has been trained more, perform Exploitation
+        # In the beginning (< 80 simulations) perform "Exploration"
+        # Once the model has been trained more (> 80 simulations), perform "Exploitation"
 
         self.epsilon = 80 - self.num_simulations
         final_move = [0, 0, 0]

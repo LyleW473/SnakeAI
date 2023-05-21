@@ -2,7 +2,6 @@ from pygame.draw import rect as pygame_draw_rect
 from random import choice as random_choice
 import numpy as np
 
-
 class SnakeAI:
     
     def __init__(self, x, y):

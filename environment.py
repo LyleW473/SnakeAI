@@ -38,7 +38,7 @@ class Environment:
         self.text_font = pygame_font_SysFont("Bahnschrift", 50)
         self.start_text_size = self.text_font.size("Press Spacebar to start!")
 
-        self.reset_game()
+        self.reset_game(model = None)
 
         # AI
         self.reward = 0
@@ -72,27 +72,31 @@ class Environment:
                             width = 1
                             )
     
-    def reset_game(self):
+    def reset_game(self, model):
 
         # Determines whether the snake will extend on the next self.move() call
         self.extend_snake = None
 
         # Spawn snake
         self.snake = SnakeAI(
-                        x = ((self.num_cells / 2) - 1) * self.cell_dimensions[0], 
-                        y = ((self.num_cells / 2) - 1) * self.cell_dimensions[1]
-                    )
+                            x = ((self.num_cells / 2) - 1) * self.cell_dimensions[0], 
+                            y = ((self.num_cells / 2) - 1) * self.cell_dimensions[1]
+                            )
 
         # Generate food
         self.food = self.generate_food()
         
         # Score 
-        if self.c_score > self.h_score:
+        if self.c_score > self.h_score and model != None:
+            # Save new high score
             self.h_score = self.c_score
             with open("high_score.txt", "w") as hs_file:
                 hs_file.write(str(self.h_score))
+            
+            # Save the model
+            model.save()
 
-        # Current score
+        # Reset the score (This is so that we can save the model and then reset the score)
         self.c_score = 0
 
         # Text
@@ -164,8 +168,6 @@ class Environment:
             if self.snake.check_collision(screen_width = self.dimensions[0], screen_height = self.dimensions[1]) == True or self.frame_iteration > 100 * len(self.snake.parts):
                 # Set the reward as negative
                 self.reward = -10
-                # Reset the game
-                self.reset_game()
 
             # Draw snake
             self.snake.draw(

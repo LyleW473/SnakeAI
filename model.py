@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 import os
+from numpy import array as np_array
 
 class Linear_Qnet(nn.Module):
     def __init__(self, input_size, hidden_size, output_size):
@@ -16,7 +17,7 @@ class Linear_Qnet(nn.Module):
         return x
     
     def save(self, file_name = "model.pth"):
-        model_folder_path = "./model"
+        model_folder_path = "model"
 
         if not os.path.exists(model_folder_path):
             os.makedirs(model_folder_path)
@@ -40,8 +41,8 @@ class QTrainer:
         # Convert to PyTorch tensor
         action = torch.tensor(data = action, dtype = torch.long)
         reward = torch.tensor(data = reward, dtype = torch.float)
-        state = torch.tensor(data = state, dtype = torch.float)
-        next_state = torch.tensor(data = next_state, dtype = torch.float)
+        state = torch.tensor(data = np_array(state), dtype = torch.float) # Convert to np_array for faster creation of tensor
+        next_state = torch.tensor(data = np_array(next_state), dtype = torch.float) # Convert to np_array for faster creation of tensor
 
         if len(state.shape) == 1: # 1 dimensional
             # Reshape to: (1, x) number of batches, x

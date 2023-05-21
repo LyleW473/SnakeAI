@@ -8,15 +8,18 @@ from pygame import quit as pygame_quit
 from sys import exit as sys_exit
 from environment import Environment
 from agent import Agent
+from os.path import exists as os_path_exists
+import pickle
+
 
 class Main:
     def __init__(self):
 
-        # Pygame set-up
+        # Pygame set-up 
         pygame_init()
 
         # Set the caption
-        pygame_display_set_caption("MiniMaxTicTacToe")
+        pygame_display_set_caption("SnakeAI")
 
         # Display
         dimensions = (900, 900)
@@ -73,12 +76,10 @@ class Main:
                 self.agent.train_long_memory()
                 self.agent.num_simulations += 1
                 self.environment.num_simulations = self.agent.num_simulations
-                
-                # Set new high score and save the model
-                if self.environment.c_score > self.environment.h_score:
-                    self.environment.h_score = self.environment.c_score 
-                    self.agent.model.save()
 
+                # Reset the game and save the model if the high score has been exceeded.
+                self.environment.reset_game(model = self.agent.model)
+            
             # Set the reward back to 0
             self.environment.reward = 0
             
@@ -95,6 +96,22 @@ class Main:
         for event in pygame_event_get():
             
             if event.type == pygame_QUIT:
+                
+                if os_path_exists("model"):
+                    # Save the model if the high score has been exceeded.
+                    self.environment.reset_game(model = self.agent.model)
+                    
+                    # Save memory
+                    serialised_queue = pickle.dumps(self.agent.memory)
+
+                    # Save the serialized queue to a file
+                    with open("model/memory.txt", "wb") as memory_file:
+                        memory_file.write(serialised_queue)
+
+                    # Save the number of simulations (The model does not work if this isn't saved due to the epsilon used for the agent)
+                    with open("model/simulations.txt", "w") as simulations_file:
+                        simulations_file.write(str(self.agent.num_simulations))
+
                 pygame_quit()
                 sys_exit()
 
