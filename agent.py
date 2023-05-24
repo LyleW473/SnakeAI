@@ -16,7 +16,7 @@ class Agent:
 
         self.num_simulations = 0
         self.epsilon = 0 # Randomness
-        self.gamma = 0.9 # Discount rate
+        self.gamma = 0.9 # Discount rate: (0.0 to 1.0) Low = encourages short-term rewards, High = encourages long-term rewards
         
         # Load model / Existing weights + biases (if there are any) and 
         self.model = Linear_Qnet(input_size = 11, hidden_size = 256, output_size = 3)

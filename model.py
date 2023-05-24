@@ -56,8 +56,8 @@ class QTrainer:
         prediction = self.model(state)
         target = prediction.clone()
 
-        # Iterate over tensors and apply Bellman's equation
-        # Bellman's equation: Q_new = r + y * max(next_predicted Q value)
+        # Iterate over tensors and apply Bellman equation
+        # Bellman equation: Q_new = r + y * max(next_predicted Q value)
         for i in range(len(game_over)):
             Q_new = reward[i]
             
